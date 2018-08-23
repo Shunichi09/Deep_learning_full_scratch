@@ -131,7 +131,7 @@ def main():
     output_size = 1 # 出力の次元
     time_size = 25 # Truncated BPTTの展開する時間サイズ，RNNのステップ数 # 20
     lr = 0.01 # 学習率 0.01
-    max_epoch = 5000 # 最大epoch
+    max_epoch = 4000 # 最大epoch
 
     # dataset作成
     x_train, t_train, x_test, t_test = data_editer.make_data_set(time_size, 'y')
