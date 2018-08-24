@@ -8,8 +8,8 @@ import math
 
 # NN関係
 from figure import Formal_mul_ploter
-from NN_sin import SimpleRnn, RnnLSTM # ネットワーク構成
-from optimizer_trainer_sin import SGD, Trainer # 最適化手法
+from NN_temp import SimpleRnn, Rnngen, RnnLSTM, RnnLSTMgen # ネットワーク構成
+from optimizer_trainer_temp import SGD, Trainer, RnnlmTrainer # 最適化手法
 
 # dataをreadするクラス 
 class Data(): 
@@ -20,7 +20,7 @@ class Data():
         '''
         dataの読み込み
         '''
-        data = pd.read_csv(self.path, header=None, engine='python')
+        data = pd.read_csv(self.path, engine='python')
         data = data.values # numpyへ変換
         self.data_names = data_names
 
@@ -28,6 +28,8 @@ class Data():
         self.data_dic = {}
         for i, name in enumerate(self.data_names):
             self.data_dic[name] = data[:, i]
+
+        # print(data)
 
         # 正規化
         self._min_max_normalization()
@@ -38,22 +40,22 @@ class Data():
         
         return self.data_dic
 
-    def read_sample_data(self):
+    def read_sample_data(self, name):
         '''
         sin波（ノイズ付き）の作成
         '''
-        total_size = 200
+        total_size = 1000
         # 各状態を格納
         self.data_dic = {}
         self.data_dic['x'] = [i for i in range(total_size)]
-        self.data_dic['y'] = []
+        self.data_dic['end'] = []
 
         # 何ステップか
         T = 100
 
         for i in range(total_size):
             noise = 0.05 * np.random.uniform(low=-1.0, high=1.0)
-            self.data_dic['y'].append(math.sin((i/T) * 2 * math.pi) + noise)
+            self.data_dic['end'].append(math.sin((i/T) * 2 * math.pi) + noise)
 
         # 正規化
         # self._min_max_normalization()
@@ -65,18 +67,20 @@ class Data():
         dataの最大最小正規化を行う
         '''
         for name in self.data_names:
+            if name ==  'date':
+                continue
+
             MAX = np.max(self.data_dic[name])
             MIN = np.min(self.data_dic[name])
 
-            print('MAX = {0}'.format(MAX))
-            print('MIN = {0}'.format(MIN))
+            print('name = {0} | MAX = {1} | MIN = {2} '.format(name, MAX, MIN))
 
             for k in range(len(self.data_dic[name])):
                 self.data_dic[name][k] = (self.data_dic[name][k] - MIN) / (MAX - MIN)
 
-    def make_data_set(self, T, name):
+    def make_data_set_for_NN(self, T, name):
         '''
-        datasetを作成するクラス
+        datasetを作成するクラス，保持しないタイプ
         引数はT = time_datasize !! name = dataの名前
         '''
         rate = 0.8  # datasetの割合
@@ -105,78 +109,101 @@ class Data():
         x_test = np.array(x_test, dtype='f')
         t_test = np.array(t_test, dtype='f')
 
+        # print(x_train, t_train, x_test, t_test)
+
+        return x_train, t_train, x_test, t_test
+    
+    def make_data_set_for_RNN(self, name):
+        '''
+        datasetを作成するクラス，保持するタイプ
+         name = dataの名前
+        '''
+        rate = 0.9  # datasetの割合
+        data_size = len(self.data_dic[name]) 
+        train_size = int(data_size * rate)
+
+        x_train = self.data_dic[name][:train_size-1]
+        t_train = self.data_dic[name][1:train_size]
+
+        x_train = np.array(x_train, dtype='f')
+        t_train = np.array(t_train, dtype='f')
+
+        x_test = []
+        t_test = []
+
+        # Test_data
+        x_test = self.data_dic[name][train_size:-1]
+        t_test = self.data_dic[name][train_size+1:]
+
+        x_test = np.array(x_test, dtype='f')
+        t_test = np.array(t_test, dtype='f')
+
+        # print(x_train, t_train, x_test, t_test)
+
+        print('data_size = {0} | train_size = {1} '.format(data_size, train_size))
+
         return x_train, t_train, x_test, t_test
 
 def main():
+
+    names = ['date', 'temp']
+    
     # dataの読み込み
+    # LINE
     path = 'data.csv'
-    data_editer = Data(path)
-
-    # sin波
-    data_dic = data_editer.read_sample_data()
-
+    tempre_data_editer = Data(path)
+    tempre_data_editer.read(names)
+    
     # データの可視化
-    x = data_dic['x']
-    y = [data_dic['y']]
-    x_label_name = 'x'
-    y_label_name = 'y'
-    y_names = ['y']
-    ploter = Formal_mul_ploter(x, y, x_label_name, y_label_name, y_names)
-    ploter.mul_plot()
+    for key in [tempre_data_editer]:
+        x = key.data_dic[names[0]]
+        y = [key.data_dic[names[1]]]
+        x_label_name = 'date'
+        y_label_name = 'temp'
+        y_names = names[1]
+        ploter = Formal_mul_ploter(x, y, x_label_name, y_label_name, y_names)
+        ploter.mul_plot()
 
     # ハイパーパラメータの設定
-    batch_size = 10 # バッチサイズ
+    batch_size = 20 # バッチサイズ
     input_size = 1 # 入力の次元
-    hidden_size = 20 # 隠れ層の大きさ
+    hidden_size = 100 # 隠れ層の大きさ
     output_size = 1 # 出力の次元
-    time_size = 25 # Truncated BPTTの展開する時間サイズ，RNNのステップ数 # 20
+    time_size = 50 # Truncated BPTTの展開する時間サイズ，RNNのステップ数 # 20
     lr = 0.01 # 学習率 0.01
     max_epoch = 15000 # 最大epoch
 
     # dataset作成
-    x_train, t_train, x_test, t_test = data_editer.make_data_set(time_size, 'y')
+    x_train, t_train, x_test, t_test = tempre_data_editer.make_data_set_for_RNN('temp')
 
     # モデルの生成
     # simpleRnnの場合
     # model = SimpleRnn(input_size, hidden_size, output_size)
     # LSTMの場合
     model = RnnLSTM(input_size, hidden_size, output_size)
+    predicter = RnnLSTMgen(input_size, hidden_size, output_size)
 
     # 最適化
     optimizer = SGD(lr)
-    trainer = Trainer(model, optimizer)
+    trainer = RnnlmTrainer(model, optimizer)
     
     # 勾配クリッピングを適用して学習
-    trainer.fit(x_train, t_train, time_size, max_epoch, batch_size)
+    trainer.fit(x_train, t_train, max_epoch, batch_size, time_size)
     trainer.plot()
 
     # パラメータの保存
     model.save_params()
     
     # ネットワークを用いて次のデータを予測
-    model.reset_state()
-    input_x = np.array(x_test[0, :].reshape(1, time_size, input_size), dtype='f') # 始めの入力を作成
-    predict_y = []
-    ans_t = []
-    for i in range(len(t_test)):
-        next_x = model.predict(input_x) # 次のものを予測
-        # print(next_x)
-        # リスト化
-        next_x = list(next_x.flatten())
-        input_x = list(input_x.flatten())
-        # 要素を削除して追加
-        input_x.pop(0)
-        input_x.append(next_x[-1])
-        # print(t_test[time_size + i], next_x[-1])
-        # a = input()
-        predict_y.append(next_x[-1])
-        ans_t.append(t_test[i])
-        
-        input_x = np.array(input_x).reshape(1, time_size, input_size)
+    predicter.load_params('RnnLSTM.pkl')
+    input_x = np.array(x_test[:time_size].reshape(1, time_size, input_size), dtype='f') # 始めの入力を作成
 
-    plt.plot(range(len(t_test)), predict_y, label='pre')
-    plt.plot(range(len(t_test)), ans_t, label='ans')
-    plt.legend()
+    predict_y, ans_t = predicter.generate(input_x, t_test[time_size-1:], sample_size=len(t_test[time_size-1:]))
+
+    plt.plot(range(len(x_train[-50:])), x_train[-50:], label='data', marker='.')
+    plt.plot(range(time_size + len(x_train[-50:]), time_size + len(x_train[-50:]) + len(predict_y)), predict_y, label='pre', marker='.')
+    plt.plot(range(len(x_train[-50:]),  len(x_train[-50:]) + len(ans_t)), x_test, label='ans', marker='.')
+
     plt.show()
 
 if __name__ == '__main__':
