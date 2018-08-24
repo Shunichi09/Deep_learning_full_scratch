@@ -206,10 +206,10 @@ class RnnLSTMgen(RnnLSTM):
 
             count += 1
 
-        plt.plot(range(len(t_test)), predict_y, label='pre')
-        plt.plot(range(len(t_test)), ans_t, label='ans')
-        plt.legend()
-        plt.show()
+        # plt.plot(range(len(t_test)), predict_y, label='pre')
+        # plt.plot(range(len(t_test)), ans_t, label='ans')
+        # plt.legend()
+        # plt.show()
 
         return predict_y, ans_t
 
@@ -219,7 +219,7 @@ class RnnLSTMgen(RnnLSTM):
     def set_state(self, state):
         self.lstm_layer.set_state(*state)
 
-class Rnngen(SimpleRnn):
+class SimpleRnngen(SimpleRnn):
     '''
     予測用のクラス
     '''

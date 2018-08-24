@@ -8,7 +8,7 @@ import math
 
 # NN関係
 from figure import Formal_mul_ploter
-from NN_temp import SimpleRnn, Rnngen, RnnLSTM, RnnLSTMgen # ネットワーク構成
+from NN_temp import SimpleRnn, SimpleRnngen, RnnLSTM, RnnLSTMgen # ネットワーク構成
 from optimizer_trainer_temp import SGD, Trainer, RnnlmTrainer # 最適化手法
 
 # dataをreadするクラス 
@@ -169,7 +169,7 @@ def main():
     input_size = 1 # 入力の次元
     hidden_size = 100 # 隠れ層の大きさ
     output_size = 1 # 出力の次元
-    time_size = 50 # Truncated BPTTの展開する時間サイズ，RNNのステップ数 # 20
+    time_size = 25 # Truncated BPTTの展開する時間サイズ，RNNのステップ数 # 20
     lr = 0.01 # 学習率 0.01
     max_epoch = 15000 # 最大epoch
 
@@ -178,10 +178,11 @@ def main():
 
     # モデルの生成
     # simpleRnnの場合
-    # model = SimpleRnn(input_size, hidden_size, output_size)
+    model = SimpleRnn(input_size, hidden_size, output_size)
+    predicter = SimpleRnngen(input_size, hidden_size, output_size)
     # LSTMの場合
-    model = RnnLSTM(input_size, hidden_size, output_size)
-    predicter = RnnLSTMgen(input_size, hidden_size, output_size)
+    # model = RnnLSTM(input_size, hidden_size, output_size)
+    # predicter = RnnLSTMgen(input_size, hidden_size, output_size)
 
     # 最適化
     optimizer = SGD(lr)
@@ -195,14 +196,14 @@ def main():
     model.save_params()
     
     # ネットワークを用いて次のデータを予測
-    predicter.load_params('RnnLSTM.pkl')
+    predicter.load_params('SimpleRnn.pkl')
     input_x = np.array(x_test[:time_size].reshape(1, time_size, input_size), dtype='f') # 始めの入力を作成
 
     predict_y, ans_t = predicter.generate(input_x, t_test[time_size-1:], sample_size=len(t_test[time_size-1:]))
 
     plt.plot(range(len(x_train[-50:])), x_train[-50:], label='data', marker='.')
     plt.plot(range(time_size + len(x_train[-50:]), time_size + len(x_train[-50:]) + len(predict_y)), predict_y, label='pre', marker='.')
-    plt.plot(range(len(x_train[-50:]),  len(x_train[-50:]) + len(ans_t)), x_test, label='ans', marker='.')
+    plt.plot(range(len(x_train[-50:]),  len(x_train[-50:]) + len(x_test)), x_test, label='ans', marker='.')
 
     plt.show()
 
