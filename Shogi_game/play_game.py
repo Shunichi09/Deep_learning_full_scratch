@@ -8,21 +8,22 @@ import math
 from NNs_shogi import BetterRnnlmGen, RnnlmGen
 from data_read_function import load_kifu
 
-corpus, corpus_test, word_to_id, id_to_word = load_kifu()
+senko_corpus, koko_corpus, corpus_test, word_to_id, id_to_word = load_kifu()
 vocab_size = len(word_to_id)
-corpus_size = len(corpus)
 
 model = BetterRnnlmGen(vocab_size=vocab_size, wordvec_size=650, hidden_size=650, dropout_ratio=0.0)
 # model = RnnlmGen()
-
-model.load_params('BetterRnnlm.pkl')
 
 print('先攻=1ですか？後攻=0ですか？，数字は半角で入力')
 my_turn_flag = int(input())
 
 if my_turn_flag:
+    # データの読み込み
+    model.load_params('senko_shogiRNN_param.pkl')
     text = 'という手を提案します'
 else: 
+    # データの読み込み
+    model.load_params('koko_shogiRNN_param.pkl')
     text = 'という手を打ってくると思います'
 
 print('８四歩，のように打ってください，棋譜の数字は全角です \n')
@@ -58,4 +59,3 @@ while True:
         print('相手のターンです（上記から実際に打たれた手を入力してください）')
         my_turn_flag = True
         text = 'という手を提案します'
-

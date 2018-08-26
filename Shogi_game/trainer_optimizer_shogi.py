@@ -73,7 +73,7 @@ class RnnlmTrainer:
         plt.plot(x, self.ppl_list, label='train')
         plt.xlabel('iterations (x' + str(self.eval_interval) + ')')
         plt.ylabel('perplexity')
-        plt.show()
+        # plt.show()
 
 
 def remove_duplicate(params, grads):

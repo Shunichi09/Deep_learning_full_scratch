@@ -25,16 +25,18 @@ def load_kifu():
     トレーニング用の棋譜　読み込み
     '''
     # 読み込む名人の棋譜
-    fujii = Kifu_info('fujii', 13)
-    habu = Kifu_info('habu', 100)
+    fujii = Kifu_info('fujii', 18)
+    habu = Kifu_info('habu', 150)
+    hifumin = Kifu_info('hifumin', 100)
 
     # test用の棋譜
     test = Kifu_info('test', 5)
 
     # 集めたいデータのクラスリスト
-    names_and_num_list = [fujii, habu, test]
+    names_and_num_list = [fujii, habu, hifumin, test]
 
-    kifu_data = []
+    kifu_koko_data = []
+    kifu_senko_data = []
     kifu_test_data = []
 
     for key in names_and_num_list:
@@ -71,8 +73,15 @@ def load_kifu():
             if key is test:
                 kifu_test_data.extend(each_kifu)
             else:
-                kifu_data.extend(each_kifu)
-            
+                # print(len(each_kifu))
+                if len(each_kifu) % 2 == 0: # 後攻が勝った場合
+                    kifu_koko_data.extend(each_kifu)
+                    # print('kokowin = {0}'.format(np.array(kifu_koko_data)))
+                    # sys.exit()
+                else: # 先攻が勝った場合
+                    kifu_senko_data.extend(each_kifu)
+                    # print(np.array(kifu_senko_data))
+
             # print(np.array(kifu_data))
             # sys.exit()
 
@@ -82,16 +91,16 @@ def load_kifu():
     # corpusを作成        
     word_to_id = {}
     id_to_word = {}
-    corpus, word_to_id, id_to_word = preprocess(kifu_data, word_to_id, id_to_word)
+    senko_corpus, word_to_id, id_to_word = preprocess(kifu_senko_data, word_to_id, id_to_word)
+    koko_corpus, word_to_id, id_to_word = preprocess(kifu_koko_data, word_to_id, id_to_word)
     corpus_test, word_to_id, id_to_word = preprocess(kifu_test_data, word_to_id, id_to_word)
     
     # print(word_to_id)
     # print(id_to_word)
     # print(corpus)
-
     # print(word_to_id)
 
-    return corpus, corpus_test, word_to_id, id_to_word
+    return senko_corpus, koko_corpus, corpus_test, word_to_id, id_to_word
 
 if __name__ == '__main__':
     load_kifu()
