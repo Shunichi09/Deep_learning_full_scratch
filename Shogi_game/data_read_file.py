@@ -1,42 +1,94 @@
 # 棋譜を読み込むプログラム
 import pickle
 import sys
+import numpy as np
 
-class Datas():
+# corpus作成用
+def preprocess(kifu_data, word_to_id, id_to_word):
+    for move in kifu_data:
+        if move not in word_to_id:
+            new_id = len(word_to_id)
+            word_to_id[move] = new_id
+            id_to_word[new_id] = move
+
+    corpus = np.array([word_to_id[w] for w in kifu_data])
+
+    return corpus, word_to_id, id_to_word
+
+class Kifu_info():
     def __init__(self, name, data_num):
         self.name = name
         self.data_num = data_num 
 
-fujii = Datas('fujii', 13)
+def load_kifu():
+    '''
+    トレーニング用の棋譜　読み込み
+    '''
+    # 読み込む名人の棋譜
+    fujii = Kifu_info('fujii', 13)
+    habu = Kifu_info('habu', 100)
 
-names_and_num_list = [fujii]
+    # test用の棋譜
+    test = Kifu_info('test', 5)
 
-kihu_data = []
+    # 集めたいデータのクラスリスト
+    names_and_num_list = [fujii, habu, test]
 
-for key in names_and_num_list:
-    for i in range(key.data_num):
-        f = open('./data/{0}/{1}.txt'.format(key.name, i+1))
+    kifu_data = []
+    kifu_test_data = []
 
-        line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
+    for key in names_and_num_list:
+        for i in range(key.data_num):
+            # それぞれの棋譜
+            each_kifu = ['開始'] # 開始文字を表すもの 
 
-        while True:
-            # いらない文字除外
-            split_space = line.split() # 空欄
+            f = open('./data/{0}/{1}.txt'.format(key.name, i+1))
+
+            line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
+
+            while True:
+                # いらない文字除外
+                split_space = line.split() # 空欄
+                
+                if split_space[1] == '同': # 例外なので
+                    split_space[1] = split_space[1] + split_space[2]
+
+                split_kako = split_space[1].split('(') # カッコ
+                move = split_kako[0]
+
+                each_kifu.append(move)
+
+                # print(move)
+
+                # 投了ならpass
+                if move == '投了':
+                    break
+
+                # 次を読み込み
+                line = f.readline()
             
-            if split_space[1] == '同': # 例外なので
-                split_space[1] = split_space[1] + split_space[2]
+            # 連結
+            if key is test:
+                kifu_test_data.extend(each_kifu)
+            else:
+                kifu_data.extend(each_kifu)
 
-            split_kako = split_space[1].split('(') # カッコ
-            move = split_kako[0]
+            f.close()
 
-            print(move)
+    # print(kifu_data)
+    # corpusを作成        
+    word_to_id = {}
+    id_to_word = {}
+    corpus, word_to_id, id_to_word = preprocess(kifu_data, word_to_id, id_to_word)
+    corpus_test, word_to_id, id_to_word = preprocess(kifu_test_data, word_to_id, id_to_word)
+    
+    # print(word_to_id)
+    # print(id_to_word)
+    # print(corpus)
 
-            # 投了ならpass
-            if move == '投了':
-                break
+    # print(word_to_id)
 
-            # 次を読み込み
-            line = f.readline()
+    return corpus, corpus_test, word_to_id, id_to_word
 
-        f.close()
-        sys.exit()
+if __name__ == '__main__':
+    load_kifu()
