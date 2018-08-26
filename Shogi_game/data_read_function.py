@@ -72,10 +72,13 @@ def load_kifu():
                 kifu_test_data.extend(each_kifu)
             else:
                 kifu_data.extend(each_kifu)
+            
+            # print(np.array(kifu_data))
+            # sys.exit()
 
             f.close()
 
-    # print(kifu_data)
+    # print(np.array(kifu_data))
     # corpusを作成        
     word_to_id = {}
     id_to_word = {}

@@ -9,7 +9,7 @@ from functions_shogi import eval_perplexity
 # 関数等その他もろもろ
 from NNs_shogi import Rnnlm, BetterRnnlm
 from trainer_optimizer_shogi import SGD, RnnlmTrainer
-from data_read_file import load_kifu
+from data_read_function import load_kifu
 
 def main():
     # ハイパーパラメータの設定
