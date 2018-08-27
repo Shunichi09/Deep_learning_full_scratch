@@ -50,7 +50,7 @@ def main():
         # パラメータの保存
         model.save_params(save_data_name[i])
 
-        plt.show()
+    plt.show()
 
 if __name__ == '__main__':
     main()
