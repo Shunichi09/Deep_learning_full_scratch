@@ -27,15 +27,18 @@ else:
     model.load_params('koko_shogiRNN_param.pkl')
     text = 'という手を打ってくると思います'
 
-print('８四歩，のように打ってください，棋譜の数字は全角です \n')
+print('８四歩，のように打ってください，棋譜の数字は全角です')
+print('王はすべて玉で打ってください')
 print('一番初めは，開始と打ってください \n')
 
 # 対戦の棋譜が保存されます
 moves = []
+count = 0
 
 while True:
     move = input()
     moves.append(move)
+    count += 1
 
     if move == '投了':
         print('game is done')
@@ -45,18 +48,21 @@ while True:
     # idに変換
     word_id = word_to_id[move]
 
+    # 候補をいくつ出すか
+    top = 5
+
     # 候補が返ってくる
-    candidate_move_ids, candidate_logit = model.generate(word_id, sample_size=1)
+    candidate_move_ids, candidate_logit = model.generate(word_id, top=top, sample_size=1)
 
     for i, word_id in enumerate(candidate_move_ids):
         logit = round(float(candidate_logit[i]), 2)
         print(' {0} ％ で，{1}　{2}'.format(logit * 100, id_to_word[word_id], text))
 
     if my_turn_flag:
-        print('あなたのターンです（上記から実際に打った手を入力してください）')
+        print('{0} 手目であなたのターンです（上記から実際に打った手を入力してください）'.format(count))
         my_turn_flag = False
         text = 'という手を打ってくると思います'
     else: 
-        print('相手のターンです（上記から実際に打たれた手を入力してください）')
+        print('{0} 手目で相手のターンです（上記から実際に打たれた手を入力してください）'.format(count))
         my_turn_flag = True
         text = 'という手を提案します'

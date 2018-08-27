@@ -218,7 +218,7 @@ class RnnlmGen(Rnnlm):
 
 
 class BetterRnnlmGen(BetterRnnlm):
-    def generate(self, start_id, skip_ids=None, sample_size=100):
+    def generate(self, start_id, top=5, skip_ids=None, sample_size=100):
         x = start_id
 
         # while len(word_ids) < sample_size:
@@ -229,12 +229,11 @@ class BetterRnnlmGen(BetterRnnlm):
         # print(p)
 
         # 確率と候補をを抽出する
-        top = 5 # 上位5つの手まで
         candidate_logit = []
         candidate_move_ids = []
         count = 0
 
-        print((-1 * p).argsort())
+        # print((-1 * p).argsort())
 
         for i in (-1 * p).argsort(): # indexが返ってくる
             candidate_logit.append(p[i])
