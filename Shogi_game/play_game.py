@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # 標準ライブラリ系
 import sys
 sys.path.append('..')

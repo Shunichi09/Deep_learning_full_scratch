@@ -1,4 +1,5 @@
-# Chap3で使うNN関連のプログラム(ネットワーク)
+# -*- coding: utf-8 -*-
+# ネットワーク構成
 import numpy as np
 import matplotlib.pyplot as plt
 from functions_shogi import cross_entropy_error

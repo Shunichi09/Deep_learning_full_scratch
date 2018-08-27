@@ -1,3 +1,4 @@
+
 # 棋譜を読み込むプログラム
 import pickle
 import sys
@@ -44,7 +45,7 @@ def load_kifu():
             # それぞれの棋譜
             each_kifu = ['開始'] # 開始文字を表すもの 
 
-            f = open('./data/{0}/{1}.txt'.format(key.name, i+1))
+            f = open('./data/{0}/{1}.txt'.format(key.name, i+1), 'r')
 
             line = f.readline() # 1行を文字列として読み込む(改行文字も含まれる)
 
